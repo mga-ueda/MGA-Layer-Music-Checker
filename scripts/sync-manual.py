@@ -21,7 +21,7 @@ FOLD_SUMMARY_IDS: dict[str, str] = {
     "特記事項": "app-manual-notice-heading",
     "使い方": "app-manual-heading",
     "バージョン情報": "app-manual-version-heading",
-    "ソースコードを改変する場合": "app-manual-source-heading",
+    "改変・再利用": "app-manual-source-heading",
 }
 
 USAGE_SUBSECTION_IDS: dict[str, str] = {
@@ -30,10 +30,6 @@ USAGE_SUBSECTION_IDS: dict[str, str] = {
     "再生・ミキシング・表示": "app-manual-cat-playback",
     "キーボードショートカット": "app-manual-cat-keys",
     "データの保存とパフォーマンス": "app-manual-cat-storage",
-}
-
-H3_EXTRA_IDS: dict[str, str] = {
-    "スペクトラム表示の実装": "app-manual-spectrum",
 }
 
 HTML_BEGIN = "    <!-- BEGIN:generated-manual (docs/manual.md → scripts/sync-manual.py) -->"
@@ -68,9 +64,19 @@ def split_h2_sections(body: str) -> list[tuple[str, str]]:
 
 
 def inline_md_to_html(text: str) -> str:
+    def repl_link(m: re.Match[str]) -> str:
+        label = m.group(1)
+        url = m.group(2)
+        return f'<a href="{html.escape(url, quote=True)}">{html.escape(label)}</a>'
+
     def repl_code(m: re.Match[str]) -> str:
         return f"<code>{html.escape(m.group(1))}</code>"
 
+    def repl_strong(m: re.Match[str]) -> str:
+        return f"<strong>{m.group(1)}</strong>"
+
+    text = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", repl_link, text)
+    text = re.sub(r"\*\*(.+?)\*\*", repl_strong, text)
     return re.sub(r"`([^`]+)`", repl_code, text)
 
 
@@ -123,11 +129,7 @@ def block_md_to_html(content: str, *, usage_subsections: bool) -> str:
                 )
                 out.append(f'            <h4 id="{sid}">{html.escape(title)}</h4>')
             else:
-                hid = H3_EXTRA_IDS.get(title, "")
-                if hid:
-                    out.append(f'        <h3 id="{hid}">{html.escape(title)}</h3>')
-                else:
-                    out.append(f"        <h3>{html.escape(title)}</h3>")
+                out.append(f"        <h3>{html.escape(title)}</h3>")
             i += 1
             while i < len(lines) and not lines[i].strip():
                 i += 1
@@ -191,18 +193,50 @@ def patch_index(html_folds: str) -> None:
     INDEX_HTML.write_text(pattern.sub(replacement, text, count=1), encoding="utf-8", newline="\n")
 
 
+def github_anchor(title: str) -> str:
+    """GitHub 目次リンク用のアンカー（日本語見出し向けの簡易版）。"""
+    t = title.strip().lower()
+    t = t.replace("（", "").replace("）", "").replace("(", "").replace(")", "")
+    t = re.sub(r"\s+", "-", t)
+    t = re.sub(r"[^0-9a-z\u3040-\u30ff\u3400-\u9fff\-·]", "", t)
+    return t
+
+
+def build_toc(manual_body: str) -> str:
+    lines: list[str] = []
+    for title, content in split_h2_sections(manual_body):
+        lines.append(f"- [{title}](#{github_anchor(title)})")
+        if title == "使い方":
+            for m in re.finditer(r"^### (.+)$", content, re.MULTILINE):
+                sub = m.group(1).strip()
+                if re.match(r"^v\d", sub, re.IGNORECASE):
+                    continue
+                lines.append(f"  - [{sub}](#{github_anchor(sub)})")
+    return "\n".join(lines)
+
+
+def strip_maintainer_comments(text: str) -> str:
+    return re.sub(r"<!-- maintainer-only:.*?-->\s*", "", text, flags=re.DOTALL).rstrip() + "\n"
+
+
 def build_readme(readme_head: str, manual_body: str) -> str:
-    notice = (
-        "> **取扱説明** — 以下の「特記事項」以降は [`docs/manual.md`](docs/manual.md) と同一です。"
-        " 編集後は `py -3 scripts/sync-manual.py` を実行してください。\n\n"
+    body = strip_maintainer_comments(manual_body)
+    toc = build_toc(body)
+    return (
+        readme_head.rstrip()
+        + "\n\n## 目次\n\n"
+        + toc
+        + "\n\n---\n\n"
+        + body.lstrip()
+        + "\n"
     )
-    return readme_head.rstrip() + "\n\n---\n\n" + notice + manual_body.lstrip() + "\n"
 
 
 def main() -> None:
     text = read_manual()
     readme_head, manual_body = split_readme_and_body(text)
-    patch_index(build_fold_html(manual_body))
+    body = strip_maintainer_comments(manual_body)
+    patch_index(build_fold_html(body))
     README_MD.write_text(build_readme(readme_head, manual_body), encoding="utf-8", newline="\n")
     print(f"updated {INDEX_HTML.relative_to(ROOT)}")
     print(f"updated {README_MD.relative_to(ROOT)}")

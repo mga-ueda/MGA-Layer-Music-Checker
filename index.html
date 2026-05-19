@@ -181,10 +181,13 @@
         <summary class="app-doc-fold__summary" id="app-manual-notice-heading">特記事項</summary>
         <div class="app-doc-fold__body app-manual">
         <ul>
-            <li>本ページは無償で提供される実験的なウェブアプリです。不具合を常時監視しておらず、ご利用中に問題が生じても原則として把握いたしません。あらかじめご了承のうえご利用ください。</li>
-            <li>このページの HTML・CSS・JavaScript は目的を問わず自由に改変・複製・再利用して構いません（商用・社内ツールを含みます）。連絡も不要です。独自版を公開・配布する場合、フッターのコピーライト表記とリンクは削除しても構いません（未改変の配布では残すことを推奨しますが、フォークや大幅なカスタマイズでは必須ではありません）。</li>
+            <li>本ページは<strong>無償で提供される実験的なウェブアプリ</strong>です。不具合を常時監視しておらず、ご利用中に問題が生じても原則として把握いたしません。あらかじめご了承のうえご利用ください。</li>
+            <li>音声は<strong>このブラウザ内でのみ</strong>デコード・再生され、サーバーへは<strong>いかなる情報もアップロードされません</strong>。<strong>Google Chrome</strong> の利用を推奨します。ブラウザや形式によってはデコードできないことがあります。</li>
+            <li>このページの <strong>HTML・CSS・JavaScript</strong> は目的を問わず<strong>自由に改変・複製・再利用</strong>して構いません（商用・社内ツールを含みます）。連絡も不要です。独自版を公開・配布する場合、フッターのコピーライト表記とリンクは<strong>削除しても構いません</strong>（未改変の配布では残すことを推奨しますが、フォークや大幅なカスタマイズでは必須ではありません）。</li>
+            <li>本アプリは静的ファイル（<code>index.html</code>・<code>css/</code>・<code>js/</code> など）で構成されています。<strong>ビルドやサーバーは不要</strong>です。フォルダごと保存し、ルートの <code>index.html</code> をブラウザで開いてください（<code>file://</code> で動作します。favicon 等の外部 CDN 参照は環境により取得できない場合があります）。</li>
             <li>スペクトラムアナライザーは特定の計測器や製品仕様の再現を目的としたものではありません。制作者の好みの挙動に寄せていますが、帯域検波・準ピーク検波・キャリブレーションは Web Audio の AnalyserNode と独自後処理の組み合わせであり、商用アナライザの代替にはなりません。</li>
-            <li>本アプリは <code>index.html</code>・<code>css/main.css</code>・<code>js/main.js</code> の静的ファイルで構成されており、ビルドは不要です。ローカル HTTP サーバー経由、またはフォルダごと保存して <code>index.html</code> をブラウザで開いて利用できます（外部 CSS/JS は同一フォルダ構成が必要です）。</li>
+            <li>ディスク上の元ファイルを編集したり書き出しし直した場合でも、本アプリは<strong>自動では再読み込みしません</strong>。更新した音声を反映するには、<strong>ドロップゾーン</strong>へ再度ドロップしてください。前回セッションの復元はブラウザ内の保存データ（<code>IndexedDB</code>）に保存されたコピーを参照します（元ファイルのパスは保持しません）。ブラウザのストレージ整理により保存データが消えると、前回のトラックは復元できません。</li>
+            <li><strong>Spectrum floor</strong> / <strong>Level meter floor</strong> / フェード時間（秒）などの UI 設定は、次回開いたときにブラウザ内（<code>localStorage</code>）から復元されます。読み込んだ音声データのコピーもブラウザ内（<code>IndexedDB</code>）に保存されます。</li>
         </ul>
         </div>
     </details>
@@ -225,12 +228,23 @@
         <section class="app-manual-category" aria-labelledby="app-manual-cat-storage">
             <h4 id="app-manual-cat-storage">データの保存とパフォーマンス</h4>
         <ul>
-            <li>各スロットの音量・Mute・Solo などのミックス状態と、読み込んだ音声のコピーは、ドロップ直後およびミックス操作のあと IndexedDB に保存され、次回以降 PLAY で前回トラックを復元するときに使われます（HTTP のディスクキャッシュではなく、このアプリ用の保存領域です）。既定の初期値や選択肢のリストをソース内で変更することもできます。変更手順は、「ソースコードを改変する場合」を参照してください。</li>
+            <li>各スロットの音量・Mute・Solo などのミックス状態と、読み込んだ音声のコピーは、ドロップ直後およびミックス操作のあと IndexedDB に保存され、次回以降 PLAY で前回トラックを復元するときに使われます（HTTP のディスクキャッシュではなく、このアプリ用の保存領域です）。</li>
             <li>スペクトラム表示下限・レベルメーター表示下限・フェード時間（秒）を変更すると、ブラウザのローカルストレージに保存され、次回このページを開いたときに復元されます。</li>
             <li>ドロップで読み込んだ音声は、その時点のファイル内容がブラウザの IndexedDB にコピーされ保存されます。あとから PLAY で前回セッションを復元するとき参照されるのはこのコピーであり、ドロップ元のファイルパスは保持せず、ディスク上の元ファイルを自動で読み直すこともありません。<span class="app-manual-r255">DAW 等で波形・音声を更新したあとに本アプリへ最新版を反映したい場合は、必ずファイルをドロップし直してください。</span>ブラウザのストレージ整理や設定により IndexedDB が消えると、前回のトラックは復元できません。</li>
             <li>データ量の多いトラックを複数同時に扱うと、ブラウザのメモリ使用量が増え、操作や描画の応答が遅くなることがあります。長時間の連続再生のあとも同様です。タブをバックグラウンドに置いたり、ブラウザや OS の省電力・省リソースの働きでタブの優先度が下がったりすると、音声の再生そのものは続く場合でも、タイマーや <code>requestAnimationFrame</code> の更新頻度が下がり、メーターやシークバーなど画面表示の追従が鈍くなることがあります（ブラウザ仕様によるものです）。表示を確実に追いたいときはタブを前面に戻すか、一度ページを閉じて開き直してください。</li>
         </ul>
         </section>
+        </div>
+    </details>
+
+    <details class="app-doc-fold">
+        <summary class="app-doc-fold__summary" id="app-manual-source-heading">改変・再利用</summary>
+        <div class="app-doc-fold__body app-manual">
+        <ul>
+            <li>このページの <strong>HTML・CSS・JavaScript</strong> は、目的を問わず<strong>自由に改変・複製・再利用</strong>して構いません（商用・社内ツールを含みます）。連絡も不要です。</li>
+            <li>ソースコードは <a href="https://github.com/mga-ueda/MGA-Layer-Music-Checker">GitHub リポジトリ（mga-ueda/MGA-Layer-Music-Checker）</a> で公開しています（<strong>Code</strong> → <strong>Download ZIP</strong> または <strong>git clone</strong> で取得できます）。</li>
+            <li>独自版を公開・配布する場合、フッターのコピーライト表記とリンクは<strong>削除しても構いません</strong>（未改変の配布では残すことを推奨しますが、フォークや大幅なカスタマイズでは必須ではありません）。</li>
+        </ul>
         </div>
     </details>
 
@@ -250,22 +264,6 @@
         <h3>v1.00 - 2026年5月12日</h3>
         <ul>
             <li>初稿（初版リリース）</li>
-        </ul>
-        </div>
-    </details>
-
-    <details class="app-doc-fold">
-        <summary class="app-doc-fold__summary" id="app-manual-source-heading">ソースコードを改変する場合</summary>
-        <div class="app-doc-fold__body app-manual">
-        <h3>ソースの読み方とユーザー初期値</h3>
-        <ul>
-            <li><code>js/main.js</code> 先頭付近の定数（ <code>DEFAULT_SPECTRUM_FLOOR_DB</code>・<code>DEFAULT_METER_FLOOR_DB</code>・<code>DEFAULT_FADE_TIME_SEC</code> ）で、スペクトラム／メーター表示の初期下限 dB とフェード時間（秒）の初期値を変更できます。dB は <code>DISPLAY_ANALYSIS_FLOOR_DB</code> に含まれる値に合わせてください。含まれない値にした場合は、スペクトラム・メーターとも -50 dB にフォールバックします。フェード秒数は 1〜30 の整数のみ（それ以外・空欄は <code>DEFAULT_FADE_TIME_SEC</code> を 1〜30 に収めた値に置き換え）。下限 dB の選択肢を増やすときは、<code>DISPLAY_ANALYSIS_FLOOR_DB</code> の配列と、トランスポート付近のセレクトの <code>&lt;option&gt;</code> を同じ集合になるよう揃えて更新してください。画面上で変更した表示下限・フェード秒数の保存先、および音声セッションの保存先については、取扱説明の「特記事項」「使い方」を参照してください。</li>
-        </ul>
-        <h3 id="app-manual-spectrum">スペクトラム表示の実装</h3>
-        <ul>
-            <li>各列の中心周波数は、グラフ下の三方オクタ系に近い周波数ラベル（上下段を合わせた位置）と同じ並びに揃えています（ナイキスト周波数以下に入る分だけがバーとして表示され、多いときは 31 本になります）。帯域レベルは、マスター直後の Analyser の FFT から各帯の境界で電力を重み付け積分したあと、ごく弱い列方向ガウス（SPEC_BLUR_SIGMA）で隣列にわずかに漏らします（σ=0 だと単音が 1 列だけに閉じることがある）。SPEC_SKIRT_* はぼかし成分の距離別ブースト／減衰で、山の肩の形に強く効きます。単音らしいときはぼかし後の最大を時域ピーク dB に合わせる補正をかけます。</li>
-            <li>バー本体には、計測用バルメータでいう準ピークに近い体感になるよう、上昇と落下で時定数の違う指数追随（SPEC_SPECT_QP_RISE_SEC・SPEC_SPECT_QP_FALL_SEC）をかけています。列ピーク表示の中心ホールド秒数は SPEC_SPECT_PEAK_HOLD_CENTER_SEC（L/R メーターの PEAK_HOLD_SEC とは別）、ホールド後の減衰は SPEC_PEAK_RELEASE_DB_PER_SEC 基準です。</li>
-            <li>FFT と時域ピークのキャリブレーションで周波数ビンをわずかに補正し、例えば -20 dBFS の正弦波がスペクトラム上でおおよそ -20 dB に触れるようにしています（厳密ではありません）。ヘッドルームの固定クリップはかけず、実信号が 0 dBFS に近いときは 0 dB まで届き得ます。一方で、据え置き型アナライザで好まれる「ピークがすぐ満タンにならない」見え方として、SPEC_DISPLAY_PEAK_SOFT_KNEE_DB より上の帯だけ緩やかな非線形（SPEC_DISPLAY_PEAK_SOFT_GAMMA）で中間をやや低く見せています。</li>
         </ul>
         </div>
     </details>
