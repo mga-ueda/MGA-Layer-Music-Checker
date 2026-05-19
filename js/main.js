@@ -636,11 +636,9 @@ function isAllowedAudioFile(file) {
     return ALLOWED_AUDIO_EXTENSIONS.some((ext) => n.endsWith(ext));
 }
 
-document.getElementById('main-drop-zone').ondragover = (e) => e.preventDefault();
-document.getElementById('main-drop-zone').ondrop = async (e) => {
-    e.preventDefault();
-    const files = Array.from(e.dataTransfer.files).filter(isAllowedAudioFile)
-        .sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true}));
+async function loadAudioFilesFromFileList(fileList) {
+    const files = Array.from(fileList || []).filter(isAllowedAudioFile)
+        .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
     if (files.length === 0) {
         writeLog('No supported audio files (WAV / Wave / MP3 / AIF / AIFF).');
         return;
@@ -659,8 +657,10 @@ document.getElementById('main-drop-zone').ondrop = async (e) => {
             const rawCopy = arrayBuffer.slice(0);
             const buffer = await audioCtx.decodeAudioData(arrayBuffer);
             mountDecodedTrackAtSlot(i, buffer, files[i].name, rawCopy);
-            writeLog(`Slot ${i+1} loaded: ${files[i].name}`);
-        } catch (err) { writeLog(`Error Slot ${i+1}: ${err.message}`); }
+            writeLog(`Slot ${i + 1} loaded: ${files[i].name}`);
+        } catch (err) {
+            writeLog(`Error Slot ${i + 1}: ${err.message}`);
+        }
     }
     updateAllFaderButtons();
     if (tracks[0]) {
@@ -669,13 +669,81 @@ document.getElementById('main-drop-zone').ondrop = async (e) => {
     }
     if (tracks.some((t) => t)) {
         await persistLastSessionToIDB();
-        shortestDuration = Math.min(...tracks.filter(t => t).map(t => t.buffer.duration));
+        shortestDuration = Math.min(...tracks.filter((t) => t).map((t) => t.buffer.duration));
         document.getElementById('totalTime').innerText = formatTime(shortestDuration);
-        writeLog("All tracks ready.");
-        writeLog("Transport: Auto-play");
+        writeLog('All tracks ready.');
+        writeLog('Transport: Auto-play');
         await startTransportFromStart();
     }
-};
+}
+
+function initMainDropZone() {
+    const dropZone = document.getElementById('main-drop-zone');
+    if (!dropZone) return;
+
+    let filePicker = document.getElementById('audio-file-picker');
+    if (!filePicker) {
+        filePicker = document.createElement('input');
+        filePicker.type = 'file';
+        filePicker.id = 'audio-file-picker';
+        filePicker.multiple = true;
+        filePicker.accept = '.wav,.wave,.mp3,.aif,.aiff,audio/wav,audio/mpeg,audio/mp3,audio/aiff';
+        filePicker.hidden = true;
+        document.body.appendChild(filePicker);
+    }
+
+    let dragHoverDepth = 0;
+
+    dropZone.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragHoverDepth++;
+        dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+        dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragHoverDepth = Math.max(0, dragHoverDepth - 1);
+        if (dragHoverDepth === 0) dropZone.classList.remove('dragover');
+    });
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragHoverDepth = 0;
+        dropZone.classList.remove('dragover');
+        void loadAudioFilesFromFileList(e.dataTransfer && e.dataTransfer.files);
+    });
+
+    dropZone.addEventListener('click', () => filePicker.click());
+    dropZone.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            filePicker.click();
+        }
+    });
+    if (!dropZone.hasAttribute('tabindex')) dropZone.setAttribute('tabindex', '0');
+
+    filePicker.addEventListener('change', () => {
+        if (filePicker.files && filePicker.files.length) {
+            void loadAudioFilesFromFileList(filePicker.files);
+        }
+        filePicker.value = '';
+    });
+
+    document.addEventListener('dragover', (e) => {
+        if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) {
+            e.preventDefault();
+        }
+    });
+}
+
+initMainDropZone();
 
 const formatTime = (sec) => {
     if (isNaN(sec) || sec < 0) return "00:00";

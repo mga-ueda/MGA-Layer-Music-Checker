@@ -1,21 +1,24 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "chrome",
-            "request": "launch",
-            "name": "ブラウザでデバッグ (Chrome)",
-            "url": "http://127.0.0.1:5500/index.html",
-            "webRoot": "${workspaceFolder}",
-            "preLaunchTask": "Start local server"
-        },
-        {
-            "type": "msedge",
-            "request": "launch",
-            "name": "ブラウザでデバッグ (Edge)",
-            "url": "http://127.0.0.1:5500/index.html",
-            "webRoot": "${workspaceFolder}",
-            "preLaunchTask": "Start local server"
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "既定ブラウザで index.html を開く",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cmd /c start \"\" \"${workspaceFolder}/index.html\"",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Edge で開く（デバッグ）",
+      "type": "msedge",
+      "request": "launch",
+      "file": "${workspaceFolder}/index.html"
+    },
+    {
+      "name": "Chrome で開く（デバッグ）",
+      "type": "chrome",
+      "request": "launch",
+      "file": "${workspaceFolder}/index.html"
+    }
+  ]
 }
