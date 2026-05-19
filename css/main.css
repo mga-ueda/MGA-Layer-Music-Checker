@@ -274,7 +274,18 @@ h2.app-title {
     flex-wrap: wrap;
     color: #a8b0c0;
 }
-.global-settings #fadeTime {
+.fade-duration-container {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    box-sizing: border-box;
+    min-height: var(--settings-pill-min-h);
+    background: rgba(0, 0, 0, 0.28);
+    padding: var(--settings-pill-pad-y) 14px;
+    border-radius: 999px;
+    border: var(--transport-frame-border) solid rgba(255, 255, 255, 0.08);
+}
+.fade-duration-container #fadeTime {
     box-sizing: border-box;
     width: 52px;
     min-width: 52px;
