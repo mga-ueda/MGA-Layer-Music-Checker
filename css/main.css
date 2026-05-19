@@ -103,6 +103,10 @@ h2.app-title {
     color: #aeb6ca;
     font-weight: 700;
 }
+#main-drop-zone .drop-zone-note--privacy,
+#main-drop-zone .drop-zone-note--privacy strong {
+    color: rgb(255, 0, 0);
+}
 /* 子要素上へのドロップでも #main-drop-zone が受け取れるようにする */
 #main-drop-zone .drop-zone-title,
 #main-drop-zone .drop-zone-note {
