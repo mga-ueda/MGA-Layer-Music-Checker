@@ -20,8 +20,9 @@ MANUAL_BODY_MARKER = "<!-- manual-body-start -->"
 FOLD_SUMMARY_IDS: dict[str, str] = {
     "特記事項": "app-manual-notice-heading",
     "使い方": "app-manual-heading",
-    "バージョン情報": "app-manual-version-heading",
     "改変・再利用": "app-manual-source-heading",
+    "ライセンス": "app-manual-license-heading",
+    "バージョン情報": "app-manual-version-heading",
 }
 
 USAGE_SUBSECTION_IDS: dict[str, str] = {
