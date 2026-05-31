@@ -195,6 +195,7 @@ let spectrumBandEnv = null;
 let spectrumPeakHoldDb = null;
 let spectrumPeakHoldUntil = null;
 let lastSpectrumDrawT = 0;
+let spectrumLayoutRefreshTimer = null;
 /* drawSpectrum: FFT/帯域/ぼかし用の再利用バッファ（長さは analyser / 帯本数に追随。中身は毎フレーム再計算） */
 let spectrumScratchFloat = null;
 let spectrumScratchFloatLen = 0;
@@ -236,6 +237,7 @@ const MONITOR_CHROME_FONT_PX = 8;
 
 const canvas = document.getElementById('spectrumCanvas');
 const canvasCtx = canvas.getContext('2d');
+const spectrumCanvasWrap = document.querySelector('.spectrum-canvas-wrap');
 
 const mixerGrid = document.getElementById('mixer-grid');
 mixerGrid.innerHTML = '';
@@ -958,10 +960,15 @@ bindMonitorFloorControls();
 })();
 
 requestAnimationFrame(() => paintSpectrumIdle());
+(function initSpectrumLayoutResizeObserver() {
+    if (spectrumCanvasWrap && typeof ResizeObserver !== 'undefined') {
+        new ResizeObserver(() => scheduleSpectrumLayoutRefresh()).observe(spectrumCanvasWrap);
+    }
+})();
 window.addEventListener('resize', () => {
-    if (!requestAnimId) paintSpectrumIdle();
-    else syncMonitorAnalysisLayoutHeights();
+    syncMonitorAnalysisLayoutHeights();
     syncLogPanelHeightToShortcutGuide();
+    scheduleSpectrumLayoutRefresh();
 });
 
 const getMeterValues = (analyser, side, ctxNow) => {
@@ -1347,8 +1354,44 @@ function syncMonitorAnalysisLayoutHeights() {
     document.documentElement.style.setProperty('--spectrum-led-track-px', `${trackPx}px`);
     document.documentElement.style.setProperty('--spectrum-canvas-outer-px', `${outerPx}px`);
     syncMasterMeterBarBackgroundStyles(trackPx);
-    const wrap = document.querySelector('.spectrum-canvas-wrap');
-    if (wrap) wrap.style.minHeight = `${outerPx}px`;
+    if (spectrumCanvasWrap) {
+        spectrumCanvasWrap.style.minHeight = `${outerPx}px`;
+        spectrumCanvasWrap.style.height = `${outerPx}px`;
+    }
+}
+
+/** ラッパ幅（親 flex の実幅）。canvas に固定 px 幅を付けるとリサイズ後に追従しなくなる */
+function spectrumLayoutWidthCss() {
+    if (spectrumCanvasWrap) {
+        const w = spectrumCanvasWrap.clientWidth | 0;
+        if (w >= 2) return w;
+    }
+    return canvas ? canvas.clientWidth | 0 : 0;
+}
+
+/** リサイズ完了後: レイアウト確定後にスペクトラムをフル再描画 */
+function commitSpectrumLayoutAfterResize() {
+    syncMonitorAnalysisLayoutHeights();
+    requestAnimationFrame(() => {
+        syncMonitorAnalysisLayoutHeights();
+        if (!requestAnimId) {
+            paintSpectrumIdle();
+            return;
+        }
+        if (masterAnalyser && audioCtx) {
+            drawSpectrum();
+        } else {
+            paintSpectrumIdle();
+        }
+    });
+}
+
+function scheduleSpectrumLayoutRefresh() {
+    if (spectrumLayoutRefreshTimer != null) clearTimeout(spectrumLayoutRefreshTimer);
+    spectrumLayoutRefreshTimer = setTimeout(() => {
+        spectrumLayoutRefreshTimer = null;
+        commitSpectrumLayoutAfterResize();
+    }, 120);
 }
 
 installMasterMeterScaleUI();
@@ -1576,14 +1619,15 @@ function spectrumDrawSpectrumLedPeaks(bands, plotY, plotH, rects, cellsOpt) {
 /** HiDPI でラベルが滲まないようバッキングストアを DPR 倍にする（描画は CSS ピクセル座標のまま） */
 function spectrumResizeCanvasBackingStore() {
     if (!canvas || !canvasCtx) return null;
-    const wCss = canvas.clientWidth | 0;
-    if (wCss < 2) return null;
     const hCss = spectrumCanvasOuterHeightPx();
+    const wCss = spectrumLayoutWidthCss();
+    if (wCss < 2) return null;
+    /* 固定 px 幅を付けると親が狭くなっても canvas が古い幅のままになる */
+    canvas.style.width = '100%';
+    canvas.style.height = `${hCss}px`;
     const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
     canvas.width = Math.max(1, Math.round(wCss * dpr));
     canvas.height = Math.max(1, Math.round(hCss * dpr));
-    canvas.style.width = `${wCss}px`;
-    canvas.style.height = `${hCss}px`;
     canvasCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
     canvasCtx.imageSmoothingEnabled = false;
     return { w: wCss, h: hCss };

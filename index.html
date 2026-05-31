@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#141418">
     <meta name="application-name" content="MGA Layer Music Checker">
-    <title>MGA Layer Music Checker - v1.02</title>
+    <title>MGA Layer Music Checker - v1.03</title>
     <!-- favicon / PWA: manifest は data: URL。アイコンは CDN の PNG（オフラインでは取得できない場合あり）。 -->
     <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f3b5.png">
     <link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f3b5.png">
@@ -17,7 +17,7 @@
     <header class="app-header">
         <div class="app-header-inner">
         <h2 class="app-title">MGA Layer Music Checker</h2>
-        <span class="version-badge">v1.02</span>
+        <span class="version-badge">v1.03</span>
         </div>
     </header>
 
@@ -27,6 +27,8 @@
         <p class="drop-zone-note"><strong>推奨ブラウザ:</strong> Google Chrome — 他ブラウザでは一部形式がデコードできない場合があります。</p>
         <p class="drop-zone-note drop-zone-note--privacy">音声は<strong>このブラウザ内でのみ</strong>デコード・再生され、いかなるデータもサーバーへは<strong>アップロードされません</strong>。</p>
     </div>
+
+    <div class="track-grid" id="mixer-grid"></div>
 
     <div class="transport-bar">
         <div class="transport-row-seek">
@@ -73,8 +75,6 @@
             </div>
         </div>
     </div>
-
-    <div class="track-grid" id="mixer-grid"></div>
 
     <div class="monitor-layout">
         <div class="analyzer-container">
@@ -139,7 +139,7 @@
     </div>
 
     <div class="bottom-info">
-        <div id="log">> System Ready. (v1.02)</div>
+        <div id="log">> System Ready. (v1.03)</div>
         <div class="shortcut-guide">
             <strong>キーボードショートカット</strong>
             <table>
@@ -215,9 +215,8 @@
             <h4 id="app-manual-cat-playback">再生・ミキシング・表示</h4>
         <ul>
             <li>読み込み成功後、スロット 1 のフェーダーは MAX に設定され、同期再生が自動で開始します。スロット 2〜4 はフェーダーを上げるまで最小のままです。</li>
-            <li>PLAY SYNC ボタンで再生の開始／停止。再生中は全トラックが同期され、シークバーと時間の最大値は、読み込んだトラック内で最短の長さのものが利用されます。</li>
-            <li>縦型のフェーダーで各チャンネル音量を設定します。Fade IN / OUT は、トランスポート行の フェード時間（1〜30 秒の整数のみ）をかけてフェーダーを変化させます。フェード中に同じスロットへ再度フェードをかけた場合は、直前のフェードに使っていた秒数を切り上げて半分にした長さ（最短 1 秒）で新しいフェードを行います（フェードが加速するような挙動になります）。この操作によるデフォルト値の上書きはされません。</li>
-            <li>画面上の Spectrum floor / Level meter floor / トランスポート付近の フェード時間（秒）で、スペクトラム／メーターの表示下限やフェード長を変更できます。</li>
+            <li>縦型のフェーダー（4 スロット）で各チャンネル音量を設定します。Fade IN / OUT は、4 スロット直下のトランスポート枠にあるフェード時間（1〜30 秒の整数のみ）をかけてフェーダーを変化させます。フェード中に同じスロットへ再度フェードをかけた場合は、直前のフェードに使っていた秒数を切り上げて半分にした長さ（最短 1 秒）で新しいフェードを行います（フェードが加速するような挙動になります）。この操作によるデフォルト値の上書きはされません。</li>
+            <li>4 スロットの直下にあるトランスポート枠（シークバー・時間表示・PLAY SYNC、Fade Duration、Master Vol、Spectrum floor / Level meter floor）で、再生の開始／停止、再生位置の確認・移動、フェード長や表示下限の変更ができます。再生中は全トラックが同期され、表示される総時間の最大値は、読み込んだトラック内で最短の長さのものが利用されます。</li>
             <li>クリップが検出されると、自動的にマスターボリュームが減衰し、クリップ表示が点灯します。マスターボリューム値は、次回起動時には 100% にリセットされます。</li>
         </ul>
         </section>
@@ -267,6 +266,11 @@
     <details class="app-doc-fold">
         <summary class="app-doc-fold__summary" id="app-manual-version-heading">バージョン情報</summary>
         <div class="app-doc-fold__body app-manual">
+        <h3>v1.03 - 2026年5月31日</h3>
+        <ul>
+            <li>トランスポート枠一式（シーク・PLAY SYNC、Fade Duration、Master Vol、表示下限）を 4 スロットの下へ移動。</li>
+            <li>ブラウザ幅変更後にスペクトラムアナライザのレイアウトが崩れる問題を修正。キャンバス幅を親ラッパに追従させ、リサイズ完了後に再描画するよう変更。</li>
+        </ul>
         <h3>v1.02 - 2026年5月14日</h3>
         <ul>
             <li>マスターボリュームの％表示に加え、線形ゲインを 100%=0 dB とした振幅比 dB（<code>20·log10(g)</code>）を併記。ゲイン 0 のときは理論値として <code>−∞ dB</code> と表示。</li>
